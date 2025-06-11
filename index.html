@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #87CEEB, #98FB98);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .game-container {
+            position: relative;
+            width: 400px;
+            height: 600px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+            border: 3px solid #4CAF50;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.3s ease;
+        }
+
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .title {
+            font-size: 36px;
+            font-weight: bold;
+            color: #2E7D32;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            min-width: 200px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #45a049, #4CAF50);
+        }
+
+        .btn.small {
+            padding: 10px 20px;
+            font-size: 14px;
+            min-width: 120px;
+        }
+
+        .btn.danger {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+        }
+
+        .btn.danger:hover {
+            background: linear-gradient(45deg, #d32f2f, #f44336);
+        }
+
+        .skin-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin: 20px;
+        }
+
+        .skin-option {
+            background: rgba(255,255,255,0.8);
+            border: 3px solid transparent;
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .skin-option:hover {
+            transform: scale(1.05);
+            border-color: #4CAF50;
+            background: rgba(255,255,255,0.9);
+        }
+
+        .skin-option.selected {
+            border-color: #2E7D32;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .skin-preview {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .skin-name {
+            font-weight: bold;
+            color: #2E7D32;
+        }
+
+        .settings-container {
+            background: rgba(255,255,255,0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px;
+            width: 90%;
+            max-height: 70%;
+            overflow-y: auto;
+        }
+
+        .setting-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .setting-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2E7D32;
+        }
+
+        .setting-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .volume-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+        }
+
+        .keybind-display {
+            display: inline-block;
+            background: #f0f0f0;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            padding: 8px 16px;
+            margin-left: 10px;
+            font-family: monospace;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .keybind-display:hover {
+            background: #e0e0e0;
+            border-color: #4CAF50;
+        }
+
+        .keybind-display.recording {
+            background: #ffeb3b;
+            border-color: #ff9800;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .game-canvas {
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 70%, #90EE90 100%);
+            display: block;
+            border-radius: 10px;
+        }
+
+        .hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            color: white;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .score-display {
+            font-size: 24px;
+        }
+
+        .highscore-display {
+            font-size: 18px;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .game-over.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .final-score {
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            text-align: center;
+            font-size: 14px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .tutorial-container {
+            background: rgba(255,255,255,0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px;
+            width: 90%;
+            max-height: 70%;
+            overflow-y: auto;
+            text-align: left;
+        }
+
+        .tutorial-step {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(76, 175, 80, 0.1);
+            border-left: 4px solid #4CAF50;
+            border-radius: 4px;
+        }
+
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .popup-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+            margin: 20px;
+        }
+
+        .popup-title {
+            color: #f44336;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .popup-message {
+            color: #333;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Main Menu -->
+        <div class="screen" id="menuScreen">
+            <h1 class="title">🐦 Flappy Bird</h1>
+            <button class="btn" onclick="showSkinScreen()">🎮 Mulai Game</button>
+            <button class="btn" onclick="showSkinScreen()">🎨 Pilih Skin</button>
+            <button class="btn" onclick="showSettingsScreen()">⚙️ Pengaturan</button>
+            <button class="btn" onclick="showTutorialScreen()">📚 Tutorial</button>
+            <div class="instructions">
+                Tekan tombol yang sudah diatur untuk terbang!
+            </div>
+        </div>
+
+        <!-- Settings Screen -->
+        <div class="screen hidden" id="settingsScreen">
+            <h2 class="title" style="font-size: 28px;">⚙️ Pengaturan</h2>
+            <div class="settings-container">
+                <div class="setting-group">
+                    <label class="setting-label">🔊 Volume Musik</label>
+                    <input type="range" class="volume-slider" id="musicVolume" min="0" max="100" value="50">
+                    <span id="volumeDisplay">50%</span>
+                </div>
+                
+                <div class="setting-group">
+                    <label class="setting-label">🔊 Volume Efek Suara</label>
+                    <input type="range" class="volume-slider" id="sfxVolume" min="0" max="100" value="70">
+                    <span id="sfxVolumeDisplay">70%</span>
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label">⌨️ Tombol Jump</label>
+                    <span>Saat ini: </span>
+                    <span class="keybind-display" id="jumpKeybind" onclick="recordKeybind('jump')">SPACE</span>
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label">⌨️ Tombol Pause</label>
+                    <span>Saat ini: </span>
+                    <span class="keybind-display" id="pauseKeybind" onclick="recordKeybind('pause')">P</span>
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label">🎵 Musik Latar</label>
+                    <select class="setting-input" id="backgroundMusic">
+                        <option value="default">Default</option>
+                        <option value="assets/music/bg1.mp3">Background Music 1</option>
+                        <option value="assets/music/bg2.mp3">Background Music 2</option>
+                        <option value="assets/music/bg3.mp3">Background Music 3</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn small" onclick="saveSettings()">💾 Simpan</button>
+            <button class="btn small danger" onclick="showMenuScreen()">🔙 Kembali</button>
+        </div>
+
+        <!-- Tutorial Screen -->
+        <div class="screen hidden" id="tutorialScreen">
+            <h2 class="title" style="font-size: 28px;">📚 Tutorial</h2>
+            <div class="tutorial-container">
+                <div class="tutorial-step">
+                    <strong>🎯 Tujuan Game:</strong><br>
+                    Bantu karakter terbang melewati pipa-pipa hijau tanpa menabrak. Dapatkan skor setinggi mungkin!
+                </div>
+                <div class="tutorial-step">
+                    <strong>🕹️ Kontrol:</strong><br>
+                    - Tekan tombol jump (default: SPACE) untuk terbang ke atas<br>
+                    - Biarkan karakter jatuh secara alami karena gravitasi<br>
+                    - Tekan tombol pause (default: P) untuk jeda game
+                </div>
+                <div class="tutorial-step">
+                    <strong>📊 Scoring:</strong><br>
+                    - Setiap pipa yang berhasil dilewati = +1 poin<br>
+                    - Skor tertinggi akan tersimpan secara otomatis<br>
+                    - Skor dienkripsi untuk keamanan
+                </div>
+                <div class="tutorial-step">
+                    <strong>🎨 Kustomisasi:</strong><br>
+                    - Pilih berbagai karakter di menu skin<br>
+                    - Atur volume musik dan efek suara<br>
+                    - Ubah tombol kontrol sesuai keinginan
+                </div>
+                <div class="tutorial-step">
+                    <strong>⚠️ Tips:</strong><br>
+                    - Timing adalah kunci utama<br>
+                    - Jangan tekan tombol terlalu cepat atau terlalu lambat<br>
+                    - Perhatikan jarak antar pipa
+                </div>
+            </div>
+            <button class="btn small danger" onclick="showMenuScreen()">🔙 Kembali</button>
+        </div>
+
+        <!-- Skin Selection -->
+        <div class="screen hidden" id="skinScreen">
+            <h2 class="title" style="font-size: 28px;">🎨 Pilih Karakter</h2>
+            <div class="skin-container">
+                <div class="skin-option selected" data-skin="bird" onclick="selectSkin('bird')">
+                    <div class="skin-preview">🐦</div>
+                    <div class="skin-name">Burung</div>
+                </div>
+                <div class="skin-option" data-skin="plane" onclick="selectSkin('plane')">
+                    <div class="skin-preview">✈️</div>
+                    <div class="skin-name">Pesawat</div>
+                </div>
+                <div class="skin-option" data-skin="rocket" onclick="selectSkin('rocket')">
+                    <div class="skin-preview">🚀</div>
+                    <div class="skin-name">Roket</div>
+                </div>
+                <div class="skin-option" data-skin="bee" onclick="selectSkin('bee')">
+                    <div class="skin-preview">🐝</div>
+                    <div class="skin-name">Lebah</div>
+                </div>
+            </div>
+            <button class="btn" onclick="startGame()">🎮 Mulai Bermain</button>
+            <button class="btn small danger" onclick="showMenuScreen()">🔙 Kembali</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div class="screen hidden" id="gameScreen">
+            <canvas class="game-canvas" id="gameCanvas" width="400" height="600"></canvas>
+            <div class="hud">
+                <div class="score-display" id="score">Score: 0</div>
+                <div class="highscore-display" id="highscore">Best: 0</div>
+            </div>
+            <div class="game-over" id="gameOver">
+                <div class="final-score" id="finalScore">Game Over!</div>
+                <div id="newHighscore" style="color: #FFD700; font-weight: bold; margin: 10px 0; display: none;">🏆 New High Score! 🏆</div>
+                <button class="btn" onclick="restartGame()">🔄 Main Lagi</button>
+                <button class="btn small danger" onclick="showMenuScreen()">🏠 Menu Utama</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anti-cheat popup -->
+    <div class="popup-overlay" id="anticheatPopup" style="display: none;">
+        <div class="popup-content">
+            <div class="popup-title">🚫 Akses Terdeteksi</div>
+            <div class="popup-message">
+                Sistem mendeteksi penggunaan developer tools atau ekstensi yang dapat memanipulasi game.<br><br>
+                Mohon tutup DevTools dan disable ekstensi seperti Tampermonkey untuk melanjutkan bermain.
+            </div>
+            <button class="btn danger" onclick="location.reload()">🔄 Reload Halaman</button>
+        </div>
+    </div>
+
+    <!-- Audio elements -->
+    <audio id="backgroundMusic" loop></audio>
+    <audio id="jumpSound" preload="auto"></audio>
+    <audio id="scoreSound" preload="auto"></audio>
+    <audio id="gameOverSound" preload="auto"></audio>
+
+    <script>
+        // Game state
+        let currentScreen = 'menu';
+        let selectedSkin = 'bird';
+        let gameRunning = false;
+        let gamePaused = false;
+        let score = 0;
+        let highScore = 0;
+        let recordingKeybind = null;
+
+        // Settings
+        let settings = {
+            musicVolume: 50,
+            sfxVolume: 70,
+            jumpKey: 'Space',
+            pauseKey: 'KeyP',
+            backgroundMusic: 'default'
+        };
+
+        // Audio elements
+        let bgMusic, jumpSound, scoreSound, gameOverSound;
+
+        // Skin configurations
+        const skins = {
+            bird: '🐦',
+            plane: '✈️',
+            rocket: '🚀',
+            bee: '🐝'
+        };
+
+        // Canvas and context
+        let canvas, ctx;
+
+        // Game objects
+        let player = {
+            x: 80,
+            y: 300,
+            width: 40,
+            height: 40,
+            velocity: 0,
+            gravity: 0.6,
+            jump: -12
+        };
+
+        let pipes = [];
+        let pipeWidth = 60;
+        let pipeGap = 180;
+        let pipeSpeed = 2;
+
+        // Anti-cheat system (improved)
+        let anticheatActive = true;
+        let devtoolsOpen = false;
+        let anticheatTriggerCount = 0;
+        const ANTICHEAT_THRESHOLD = 3; // Require multiple triggers before showing popup
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAudio();
+            loadSettings();
+            loadHighScore();
+            setupAnticheat();
+            updateSettingsDisplay();
+        });
+
+        // Improved Anti-cheat functions
+        function setupAnticheat() {
+            // Only detect DevTools with more reasonable thresholds and delays
+            let devtoolsCheckInterval = setInterval(() => {
+                const widthThreshold = 200;
+                const heightThreshold = 200;
+                
+                // Check if window dimensions suggest devtools are open
+                const widthDiff = window.outerWidth - window.innerWidth;
+                const heightDiff = window.outerHeight - window.innerHeight;
+                
+                if (widthDiff > widthThreshold || heightDiff > heightThreshold) {
+                    anticheatTriggerCount++;
+                    if (anticheatTriggerCount >= ANTICHEAT_THRESHOLD && !devtoolsOpen) {
+                        devtoolsOpen = true;
+                        showAnticheatPopup();
+                    }
+                } else {
+                    devtoolsOpen = false;
+                    anticheatTriggerCount = Math.max(0, anticheatTriggerCount - 1);
+                }
+            }, 2000); // Check every 2 seconds instead of 1 second
+
+            // More conservative Tampermonkey/Greasemonkey detection
+            setTimeout(() => {
+                if (typeof GM_info !== 'undefined' && GM_info.script) {
+                    showAnticheatPopup();
+                }
+            }, 1000);
+
+            // Disable some shortcuts but with better error handling
+            document.addEventListener('keydown', function(e) {
+                // Only block if multiple keys are pressed together
+                if ((e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'C')) ||
+                    (e.ctrlKey && e.key === 'U') ||
+                    e.key === 'F12') {
+                    e.preventDefault();
+                    anticheatTriggerCount++;
+                    if (anticheatTriggerCount >= ANTICHEAT_THRESHOLD) {
+                        showAnticheatPopup();
+                    }
+                }
+            });
+
+            // Disable right-click context menu
+            document.addEventListener('contextmenu', e => e.preventDefault());
+        }
+
+        function showAnticheatPopup() {
+            document.getElementById('anticheatPopup').style.display = 'flex';
+            if (gameRunning) {
+                gamePaused = true;
+            }
+        }
+
+        // Audio initialization
+        function initializeAudio() {
+            bgMusic = document.getElementById('backgroundMusic');
+            jumpSound = document.getElementById('jumpSound');
+            scoreSound = document.getElementById('scoreSound');
+            gameOverSound = document.getElementById('gameOverSound');
+
+            // Set audio sources (will work when files exist)
+            jumpSound.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2H0fPTgjwIGGm98OOVNwgZap3v3Y9EDBNWqOLyvV0cBzaG0fDXgyMFLIHO8tiJOQgTV6Xs7KNVFApGoOTyvmwhBTiM0fHRgSYEKnvJ8NuOOQgTWaTi6qhUIAg9htDzNY9EDBNUqOLx"}';
+            scoreSound.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2H0fPTgjwIGGm97KNVFApGoOTyvmwhBTiM0fHRgSYEKnvJ8NuOOQgTWaTi6qhUIAg9htDzM49EDBNUqOLx}';
+            gameOverSound.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2H0fPTgjwIGGm98OOVNwgZap3v3Y9EDBNWqOLyvV0cBzaG0fDXgyMFLIHO8tiJOQgTV6Xs7KNVFApGoOTyvmwhBTiM0fHRgSYEKnvJ8NuOOQgTWaTi6qhUIAg9htDz}';
+
+            // Handle audio load errors gracefully
+            [bgMusic, jumpSound, scoreSound, gameOverSound].forEach(audio => {
+                audio.addEventListener('error', () => {
+                    console.log('Audio file not found:', audio.src);
+                });
+            });
+        }
+
+        function updateBackgroundMusic() {
+            if (settings.backgroundMusic !== 'default') {
+                bgMusic.src = settings.backgroundMusic;
+                bgMusic.volume = settings.musicVolume / 100;
+            }
+        }
+
+        function playSound(audio) {
+            if (audio && audio.readyState >= 2) {
+                audio.currentTime = 0;
+                audio.volume = settings.sfxVolume / 100;
+                audio.play().catch(() => {});
+            }
+        }
+
+        // Settings management
+        function loadSettings() {
+            const saved = localStorage.getItem('flappyBirdSettings');
+            if (saved) {
+                try {
+                    settings = {...settings, ...JSON.parse(saved)};
+                } catch (e) {
+                    console.log('Settings load error, using defaults');
+                }
+            }
+        }
+
+        function saveSettings() {
+            settings.musicVolume = parseInt(document.getElementById('musicVolume').value);
+            settings.sfxVolume = parseInt(document.getElementById('sfxVolume').value);
+            settings.backgroundMusic = document.getElementById('backgroundMusic').value;
+            
+            localStorage.setItem('flappyBirdSettings', JSON.stringify(settings));
+            updateBackgroundMusic();
+            showMenuScreen();
+        }
+
+        function updateSettingsDisplay() {
+            document.getElementById('musicVolume').value = settings.musicVolume;
+            document.getElementById('sfxVolume').value = settings.sfxVolume;
+            document.getElementById('volumeDisplay').textContent = settings.musicVolume + '%';
+            document.getElementById('sfxVolumeDisplay').textContent = settings.sfxVolume + '%';
+            document.getElementById('jumpKeybind').textContent = settings.jumpKey.replace('Key', '').replace('Space', 'SPACE');
+            document.getElementById('pauseKeybind').textContent = settings.pauseKey.replace('Key', '').replace('Space', 'SPACE');
+            document.getElementById('backgroundMusic').value = settings.backgroundMusic;
+        }
+
+        // Keybind recording
+        function recordKeybind(type) {
+            if (recordingKeybind) return;
+            
+            recordingKeybind = type;
+            const element = document.getElementById(type + 'Keybind');
+            element.textContent = 'Tekan tombol...';
+            element.classList.add('recording');
+            
+            const handleKeydown = (e) => {
+                e.preventDefault();
+                settings[type + 'Key'] = e.code;
+                element.textContent = e.code.replace('Key', '').replace('Space', 'SPACE');
+                element.classList.remove('recording');
+                recordingKeybind = null;
+                document.removeEventListener('keydown', handleKeydown);
+            };
+            
+            document.addEventListener('keydown', handleKeydown);
+        }
+
+        // Volume sliders
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                const musicSlider = document.getElementById('musicVolume');
+                const sfxSlider = document.getElementById('sfxVolume');
+                
+                if (musicSlider) {
+                    musicSlider.addEventListener('input', function() {
+                        document.getElementById('volumeDisplay').textContent = this.value + '%';
+                    });
+                }
+                
+                if (sfxSlider) {
+                    sfxSlider.addEventListener('input', function() {
+                        document.getElementById('sfxVolumeDisplay').textContent = this.value + '%';
+                    });
+                }
+            }, 100);
+        });
+
+        // High score management with improved encryption
+        async function encryptScore(score) {
+            const key = 'fariillyasvielnoveri2024';
+            const encoder = new TextEncoder();
+            const data = encoder.encode(score.toString());
+            
+            // Simple XOR encryption with timestamp
+            const timestamp = Date.now().toString();
+            const combinedData = encoder.encode(score + '|' + timestamp);
+            const keyBytes = encoder.encode(key);
+            const encrypted = new Uint8Array(combinedData.length);
+            
+            for (let i = 0; i < combinedData.length; i++) {
+                encrypted[i] = combinedData[i] ^ keyBytes[i % keyBytes.length];
+            }
+            
+            return btoa(String.fromCharCode.apply(null, encrypted));
+        }
+
+        async function decryptScore(encryptedScore) {
+            try {
+                const key = 'fariillyasvielnoveri2024';
+                const encoder = new TextEncoder();
+                const keyBytes = encoder.encode(key);
+                const encrypted = new Uint8Array(atob(encryptedScore).split('').map(char => char.charCodeAt(0)));
+                const decrypted = new Uint8Array(encrypted.length);
+                
+                for (let i = 0; i < encrypted.length; i++) {
+                    decrypted[i] = encrypted[i] ^ keyBytes[i % keyBytes.length];
+                }
+                
+                return parseInt(new TextDecoder().decode(decrypted));
+            } catch (e) {
+                return 0;
+            }
+        }
+
+        async function saveHighScore(score) {
+            const encrypted = await encryptScore(score);
+            localStorage.setItem('flappyBirdHighScore', encrypted);
+            
+            // Send to server for additional security
+            try {
+                await fetch('/api/save-score', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({encryptedScore: encrypted})
+                });
+            } catch (e) {
+                console.log('Server not available');
+            }
+        }
+
+        async function loadHighScore() {
+            const encrypted = localStorage.getItem('flappyBirdHighScore');
+            if (encrypted) {
+                highScore = await decryptScore(encrypted);
+                document.getElementById('highscore').textContent = 'Best: ' + highScore;
+            }
+        }
+
+        // Screen management
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        function showMenuScreen() {
+            showScreen('menuScreen');
+            currentScreen = 'menu';
+            if (bgMusic.src) {
+                bgMusic.pause();
+            }
+        }
+
+        function showSettingsScreen() {
+            showScreen('settingsScreen');
+            currentScreen = 'settings';
+            updateSettingsDisplay();
+        }
+
+        function showTutorialScreen() {
+            showScreen('tutorialScreen');
+            currentScreen = 'tutorial';
+        }
+
+        function showSkinScreen() {
+            showScreen('skinScreen');
+            currentScreen = 'skin';
+        }
+
+        function showGameScreen() {
+            showScreen('gameScreen');
+            currentScreen = 'game';
+        }
+
+        // Skin selection
+        function selectSkin(skin) {
+            selectedSkin = skin;
+            document.querySelectorAll('.skin-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.querySelector(`[data-skin="${skin}"]`).classList.add('selected');
+        }
+
+        // Game initialization
+        function startGame() {
+            showGameScreen();
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            
+            resetGame();
+            gameRunning = true;
+            gamePaused = false;
+            
+            updateBackgroundMusic();
+            if (bgMusic.src && settings.backgroundMusic !== 'default') {
+                bgMusic.play().catch(() => {});
+            }
+            
+            gameLoop();
+        }
+
+        function resetGame() {
+            player.y = 300;
+            player.velocity = 0;
+            pipes = [];
+            score = 0;
+            document.getElementById('score').textContent = 'Score: 0';
+            document.getElementById('gameOver').classList.remove('show');
+            document.getElementById('newHighscore').style.display = 'none';
+            
+            addPipe();
+        }
+
+        function restartGame() {
+            resetGame();
+            gameRunning = true;
+            gamePaused = false;
+            gameLoop();
+        }
+
+        // Game mechanics
+        function addPipe() {
+            let pipeHeight = Math.random() * (canvas.height - pipeGap - 100) + 50;
+            pipes.push({
+                x: canvas.width,
+                topHeight: pipeHeight,
+                bottomY: pipeHeight + pipeGap,
+                bottomHeight: canvas.height - (pipeHeight + pipeGap),
+                passed: false
+            });
+        }
+
+        function updateGame() {
+            if (!gameRunning || gamePaused) return;
+
+            // Update player
+            player.velocity += player.gravity;
+            player.y += player.velocity;
+
+            // Update pipes
+            for (let i = pipes.length - 1; i >= 0; i--) {
+                pipes[i].x -= pipeSpeed;
+
+                // Check if pipe passed player
+                if (!pipes[i].passed && pipes[i].x + pipeWidth < player.x) {
+                    pipes[i].passed = true;
+                    score++;
+                    document.getElementById('score').textContent = 'Score: ' + score;
+                    playSound(scoreSound);
+                }
+
+                // Remove pipes that are off screen
+                if (pipes[i].x + pipeWidth < 0) {
+                    pipes.splice(i, 1);
+                }
+            }
+
+            // Add new pipes
+            if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 200) {
+                addPipe();
+            }
+
+            // Check collisions
+            checkCollisions();
+        }
+
+        function checkCollisions() {
+            // Ground and ceiling collision
+            if (player.y + player.height > canvas.height || player.y < 0) {
+                gameOver();
+                return;
+            }
+
+            // Pipe collision
+            for (let pipe of pipes) {
+                if (player.x < pipe.x + pipeWidth && 
+                    player.x + player.width > pipe.x) {
+                    if (player.y < pipe.topHeight || 
+                        player.y + player.height > pipe.bottomY) {
+                        gameOver();
+                        return;
+                    }
+                }
+            }
+        }
+
+        async function gameOver() {
+            gameRunning = false;
+            playSound(gameOverSound);
+            if (bgMusic.src) {
+                bgMusic.pause();
+            }
+
+            let isNewHighScore = false;
+            if (score > highScore) {
+                highScore = score;
+                isNewHighScore = true;
+                await saveHighScore(score);
+                document.getElementById('highscore').textContent = 'Best: ' + highScore;
+                document.getElementById('newHighscore').style.display = 'block';
+            }
+
+            document.getElementById('finalScore').textContent = 
+                `Game Over! Score: ${score}${isNewHighScore ? ' 🏆' : ''}`;
+            document.getElementById('gameOver').classList.add('show');
+        }
+
+        function togglePause() {
+            if (!gameRunning) return;
+            
+            gamePaused = !gamePaused;
+            if (gamePaused) {
+                if (bgMusic.src) {
+                    bgMusic.pause();
+                }
+            } else {
+                if (bgMusic.src && settings.backgroundMusic !== 'default') {
+                    bgMusic.play().catch(() => {});
+                }
+            }
+        }
+
+        function drawGame() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw background elements (clouds)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.beginPath();
+            ctx.arc(100, 100, 30, 0, Math.PI * 2);
+            ctx.arc(320, 80, 25, 0, Math.PI * 2);
+            ctx.arc(250, 150, 35, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw pipes
+            ctx.fillStyle = '#4CAF50';
+            for (let pipe of pipes) {
+                // Top pipe
+                ctx.fillRect(pipe.x, 0, pipeWidth, pipe.topHeight);
+                // Bottom pipe
+                ctx.fillRect(pipe.x, pipe.bottomY, pipeWidth, pipe.bottomHeight);
+                
+                // Pipe caps
+                ctx.fillStyle = '#2E7D32';
+                ctx.fillRect(pipe.x - 5, pipe.topHeight - 20, pipeWidth + 10, 20);
+                ctx.fillRect(pipe.x - 5, pipe.bottomY, pipeWidth + 10, 20);
+                ctx.fillStyle = '#4CAF50';
+            }
+
+            // Draw player (using emoji as text)
+            ctx.font = '40px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(skins[selectedSkin], player.x + player.width/2, player.y + player.height - 5);
+
+            // Draw ground
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+
+            // Draw pause overlay
+            if (gamePaused) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'white';
+                ctx.font = '48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('PAUSED', canvas.width/2, canvas.height/2);
+                ctx.font = '16px Arial';
+                ctx.fillText('Tekan ' + settings.pauseKey.replace('Key', '') + ' untuk melanjutkan', canvas.width/2, canvas.height/2 + 40);
+            }
+        }
+
+        function gameLoop() {
+            updateGame();
+            drawGame();
+            
+            if (gameRunning) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // Controls
+        function jump() {
+            if (gameRunning && !gamePaused) {
+                player.velocity = player.jump;
+                playSound(jumpSound);
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('keydown', function(event) {
+            if (recordingKeybind) return;
+            
+            if (event.code === settings.jumpKey) {
+                event.preventDefault();
+                jump();
+            }
+            
+            if (event.code === settings.pauseKey) {
+                event.preventDefault();
+                togglePause();
+            }
+        });
+
+        document.addEventListener('click', function(event) {
+            if (currentScreen === 'game' && gameRunning && !gamePaused) {
+                jump();
+            }
+        });
+
+        // Touch support
+        document.addEventListener('touchstart', function(event) {
+            event.preventDefault();
+            if (currentScreen === 'game' && gameRunning && !gamePaused) {
+                jump();
+            }
+        });
+
+        // Prevent cheating via console
+        (function() {
+            let devtools = {open: false, orientation: null};
+            const threshold = 160;
+            
+            setInterval(function() {
+                if (window.outerHeight - window.innerHeight > threshold || 
+                    window.outerWidth - window.innerWidth > threshold) {
+                    if (!devtools.open) {
+                        devtools.open = true;
+                        showAnticheatPopup();
+                    }
+                } else {
+                    devtools.open = false;
+                }
+            }, 500);
+        })();
+
+        // Additional security measures
+        Object.defineProperty(window, 'score', {
+            get: function() { return undefined; },
+            set: function() { showAnticheatPopup(); }
+        });
+
+        Object.defineProperty(window, 'highScore', {
+            get: function() { return undefined; },
+            set: function() { showAnticheatPopup(); }
+        });
+
+    </script>
+</body>
+</html>
